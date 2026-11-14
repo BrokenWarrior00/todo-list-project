@@ -4,63 +4,92 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="A simple and interactive task management application.">
-    <title>My Tasks | To-Do List</title>
+    <meta name="theme-color" content="#101827">
+    <meta name="description" content="A modern and responsive To-Do List application to organize tasks, track progress and improve productivity.">
+    <title>TaskFlow | Smart To-Do List</title>
     <link rel="stylesheet" href="style.css">
     <script src="script.js" defer></script>
 </head>
 <body>
 
-    <header>
-        <h1>My Tasks</h1>
-        <p>Organize your day, one task at a time.</p>
-    </header>
-
-    <main>
-        <section class="task-section" aria-labelledby="task-heading">
-
-            <h2 id="task-heading">My To-Do List</h2>
-
-            <form id="task-form">
-                <label for="task-input">Add a new task</label>
-                <div class="input-group">
-                    <input
-                        type="text"
-                        id="task-input"
-                        placeholder="What needs to be done?"
-                        maxlength="100"
-                        required
-                    >
-                    <button type="submit">Add Task</button>
+    <main class="app-container">
+        <header class="header">
+            <div class="brand">
+                <div class="brand-icon">✓</div>
+                <div>
+                    <h1>TaskFlow</h1>
+                    <p>Your productivity space</p>
                 </div>
+            </div>
+            <div class="date-display" id="current-date"></div>
+        </header>
+
+        <section class="welcome-section">
+            <div>
+                <span class="eyebrow">STAY FOCUSED</span>
+                <h2>Make today count.</h2>
+                <p>Organize your thoughts. Complete your goals.</p>
+            </div>
+            <div class="progress-card">
+                <span>YOUR PROGRESS</span>
+                <strong id="progress-percent">0%</strong>
+                <div class="progress-track">
+                    <div class="progress-fill" id="progress-fill"></div>
+                </div>
+                <small id="progress-text">0 of 0 tasks completed</small>
+            </div>
+        </section>
+
+        <section class="task-section">
+            <div class="section-heading">
+                <div>
+                    <h2>My Tasks</h2>
+                    <p>Manage your daily activities</p>
+                </div>
+                <span class="task-count" id="task-count">0 Tasks</span>
+            </div>
+
+            <form class="task-form" id="task-form">
+                <input
+                    type="text"
+                    id="task-input"
+                    placeholder="What needs to be done?"
+                    maxlength="120"
+                    autocomplete="off"
+                    required
+                >
+                <select id="priority-input" aria-label="Task priority">
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                    <option value="low">Low</option>
+                </select>
+                <button type="submit" id="add-button">+ Add Task</button>
             </form>
 
-            <nav class="filters" aria-label="Filter tasks">
-                <button type="button" class="filter-btn active" data-filter="all">
-                    All
-                </button>
-                <button type="button" class="filter-btn" data-filter="active">
-                    Active
-                </button>
-                <button type="button" class="filter-btn" data-filter="completed">
-                    Completed
-                </button>
-            </nav>
+            <div class="filter-container" aria-label="Filter tasks">
+                <button class="filter-btn active" data-filter="all" type="button">All</button>
+                <button class="filter-btn" data-filter="active" type="button">Active</button>
+                <button class="filter-btn" data-filter="completed" type="button">Completed</button>
+            </div>
 
-            <ul id="task-list" aria-label="Your tasks">
-            </ul>
+            <div class="task-list" id="task-list" aria-live="polite">
+                <div class="empty-state">
+                    <div class="empty-icon">✦</div>
+                    <h3>No tasks yet</h3>
+                    <p>Add your first task and start being productive.</p>
+                </div>
+            </div>
 
-            <p id="empty-message" aria-live="polite">
-                No tasks yet. Add your first task!
-            </p>
-
-            <footer class="task-summary">
-                <p>Total Tasks: <span id="total-count">0</span></p>
-                <p>Completed: <span id="completed-count">0</span></p>
-                <p>Remaining: <span id="remaining-count">0</span></p>
+            <footer class="task-footer">
+                <span id="remaining-count">0 tasks remaining</span>
+                <button type="button" id="clear-completed">Clear completed</button>
             </footer>
-
         </section>
+
+        <footer class="app-footer">
+            <p>Designed for productivity. Built with HTML, CSS & JavaScript.</p>
+            <span>TaskFlow © 2026</span>
+        </footer>
     </main>
 
 </body>
