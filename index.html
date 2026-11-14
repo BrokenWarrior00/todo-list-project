@@ -1,0 +1,67 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A simple and interactive task management application.">
+    <title>My Tasks | To-Do List</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
+</head>
+<body>
+
+    <header>
+        <h1>My Tasks</h1>
+        <p>Organize your day, one task at a time.</p>
+    </header>
+
+    <main>
+        <section class="task-section" aria-labelledby="task-heading">
+
+            <h2 id="task-heading">My To-Do List</h2>
+
+            <form id="task-form">
+                <label for="task-input">Add a new task</label>
+                <div class="input-group">
+                    <input
+                        type="text"
+                        id="task-input"
+                        placeholder="What needs to be done?"
+                        maxlength="100"
+                        required
+                    >
+                    <button type="submit">Add Task</button>
+                </div>
+            </form>
+
+            <nav class="filters" aria-label="Filter tasks">
+                <button type="button" class="filter-btn active" data-filter="all">
+                    All
+                </button>
+                <button type="button" class="filter-btn" data-filter="active">
+                    Active
+                </button>
+                <button type="button" class="filter-btn" data-filter="completed">
+                    Completed
+                </button>
+            </nav>
+
+            <ul id="task-list" aria-label="Your tasks">
+            </ul>
+
+            <p id="empty-message" aria-live="polite">
+                No tasks yet. Add your first task!
+            </p>
+
+            <footer class="task-summary">
+                <p>Total Tasks: <span id="total-count">0</span></p>
+                <p>Completed: <span id="completed-count">0</span></p>
+                <p>Remaining: <span id="remaining-count">0</span></p>
+            </footer>
+
+        </section>
+    </main>
+
+</body>
+</html>
