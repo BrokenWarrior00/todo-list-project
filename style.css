@@ -7,24 +7,43 @@
 
 :root {
     color-scheme: dark;
+
     --background: #101827;
     --surface: #192438;
     --surface-light: #22314a;
+
     --text: #f1f5f9;
-    --muted: #94a3b8;
-    --accent: #8b7cff;
-    --accent-light: #b4aaff;
-    --border: rgba(255, 255, 255, 0.09);
+    --muted: #b2bfd0;
+
+    --accent: #6254d8;
+    --accent-hover: #5143c5;
+    --accent-light: #c1baff;
+
+    --border: rgba(255, 255, 255, 0.12);
     --success: #34d399;
+}
+
+html {
+    scroll-behavior: smooth;
 }
 
 body {
     min-height: 100vh;
     padding: 45px 20px;
+
     background:
-        radial-gradient(ellipse at 15% 10%, rgba(91, 76, 190, 0.17), transparent 40%),
-        radial-gradient(ellipse at 90% 90%, rgba(33, 150, 140, 0.12), transparent 40%),
+        radial-gradient(
+            ellipse at 15% 10%,
+            rgba(91, 76, 190, 0.17),
+            transparent 40%
+        ),
+        radial-gradient(
+            ellipse at 90% 90%,
+            rgba(33, 150, 140, 0.12),
+            transparent 40%
+        ),
         var(--background);
+
     color: var(--text);
     font-family: Arial, Helvetica, sans-serif;
     line-height: 1.5;
@@ -38,6 +57,34 @@ select {
 
 button {
     cursor: pointer;
+}
+
+.skip-link {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 10;
+    padding: 10px 15px;
+    color: white;
+    background: var(--accent);
+    border-radius: 7px;
+    transform: translateY(-150%);
+}
+
+.skip-link:focus {
+    transform: translateY(0);
+}
+
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
 }
 
 .app-container {
@@ -84,7 +131,7 @@ button {
 
 .welcome-section {
     display: grid;
-    grid-template-columns: 1fr 230px;
+    grid-template-columns: minmax(0, 1fr) 230px;
     align-items: center;
     gap: 30px;
     margin-bottom: 38px;
@@ -117,7 +164,7 @@ button {
     border-radius: 15px;
 }
 
-.progress-card span,
+.progress-label,
 .progress-card small {
     display: block;
     color: var(--muted);
@@ -142,14 +189,14 @@ button {
 .progress-fill {
     width: 0;
     height: 100%;
-    background: var(--accent);
+    background: var(--accent-light);
     border-radius: inherit;
     transition: width 0.2s ease;
 }
 
 .task-section {
     padding: 28px;
-    background: rgba(25, 36, 56, 0.95);
+    background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 19px;
 }
@@ -158,8 +205,8 @@ button {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 23px;
     gap: 15px;
+    margin-bottom: 23px;
 }
 
 .section-heading h2 {
@@ -176,7 +223,7 @@ button {
 
 .task-form {
     display: grid;
-    grid-template-columns: 1fr 125px auto;
+    grid-template-columns: minmax(0, 1fr) 125px auto;
     gap: 10px;
 }
 
@@ -193,11 +240,12 @@ button {
 
 .task-form input:focus,
 .task-form select:focus {
-    border-color: var(--accent);
+    border-color: var(--accent-light);
 }
 
 .task-form input::placeholder {
-    color: #77849a;
+    color: #b2bfd0;
+    opacity: 1;
 }
 
 .task-form button {
@@ -210,11 +258,12 @@ button {
 }
 
 .task-form button:hover {
-    background: #7565ec;
+    background: var(--accent-hover);
 }
 
 .filter-container {
     display: flex;
+    flex-wrap: wrap;
     gap: 9px;
     margin: 26px 0 19px;
 }
@@ -303,6 +352,7 @@ button {
 
 .task-actions {
     display: flex;
+    flex-shrink: 0;
     gap: 7px;
 }
 
@@ -371,7 +421,8 @@ button {
 
 button:focus-visible,
 input:focus-visible,
-select:focus-visible {
+select:focus-visible,
+a:focus-visible {
     outline: 2px solid var(--accent-light);
     outline-offset: 3px;
 }
@@ -389,10 +440,6 @@ select:focus-visible {
         grid-template-columns: 1fr;
     }
 
-    .progress-card {
-        max-width: none;
-    }
-
     .task-section {
         padding: 19px 14px;
     }
@@ -401,10 +448,7 @@ select:focus-visible {
         grid-template-columns: 1fr 1fr;
     }
 
-    .task-form input {
-        grid-column: 1 / -1;
-    }
-
+    .task-form input,
     .task-form button {
         grid-column: 1 / -1;
     }
