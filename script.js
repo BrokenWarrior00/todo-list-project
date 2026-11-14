@@ -1,210 +1,287 @@
 
+const STORAGE_KEY = "taskflow_tasks";
+
 const taskForm = document.getElementById("task-form");
 const taskInput = document.getElementById("task-input");
+const priorityInput = document.getElementById("priority-input");
 const taskList = document.getElementById("task-list");
-
-const emptyMessage = document.getElementById("empty-message");
-
-const totalCount = document.getElementById("total-count");
-const completedCount = document.getElementById("completed-count");
+const taskCount = document.getElementById("task-count");
 const remainingCount = document.getElementById("remaining-count");
+const progressPercent = document.getElementById("progress-percent");
+const progressFill = document.getElementById("progress-fill");
+const progressText = document.getElementById("progress-text");
+const filterButtons = document.querySelector(".filter-container");
+const clearCompleted = document.getElementById("clear-completed");
 
-const filterButtons = document.querySelectorAll(".filter-btn");
-
-let tasks = [];
+let tasks = loadTasks();
 let currentFilter = "all";
+let editingId = null;
+
+function loadTasks() {
+    try {
+        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+        return Array.isArray(saved)
+            ? saved.filter(task =>
+                task &&
+                typeof task.id === "string" &&
+                typeof task.title === "string" &&
+                typeof task.completed === "boolean" &&
+                ["low", "medium", "high"].includes(task.priority)
+            )
+            : [];
+    } catch {
+        return [];
+    }
+}
 
 function saveTasks() {
     try {
-        localStorage.setItem("tasks", JSON.stringify(tasks));
-    } catch (error) {
-        console.error("Unable to save tasks:", error);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+    } catch {
+        console.warn("Unable to save tasks.");
     }
 }
 
-function loadTasks() {
-    const savedTasks = localStorage.getItem("tasks");
-
-    if (savedTasks !== null) {
-        try {
-            const parsedTasks = JSON.parse(savedTasks);
-
-            if (Array.isArray(parsedTasks)) {
-                tasks = parsedTasks.filter(task =>
-                task &&
-                Number.isFinite(task.id) &&
-                typeof task.text === "string" &&
-                typeof task.completed === "boolean"
-                );
-            }
-        } catch (error) {
-            console.error("Unable to load tasks:", error);
-            tasks = [];
-        }
-    }
-
-    displayTasks();
+function createId() {
+    return crypto.randomUUID
+        ? crypto.randomUUID()
+        : Date.now().toString(36) + Math.random().toString(36).slice(2);
 }
 
-function updateCounts() {
-    const completed = tasks.filter(task => task.completed).length;
-
-    totalCount.textContent = tasks.length;
-    completedCount.textContent = completed;
-    remainingCount.textContent = tasks.length - completed;
-}
-
-function displayTasks() {
-    taskList.innerHTML = "";
-
-    let filteredTasks = tasks;
-
-    if (currentFilter === "active") {
-        filteredTasks = tasks.filter(task => !task.completed);
-    } else if (currentFilter === "completed") {
-        filteredTasks = tasks.filter(task => task.completed);
-    }
-
-    filteredTasks.forEach(task => {
-        const li = document.createElement("li");
-        li.dataset.id = task.id;
-
-        const checkbox = document.createElement("input");
-        checkbox.type = "checkbox";
-        checkbox.checked = task.completed;
-        checkbox.dataset.action = "toggle";
-        checkbox.setAttribute("aria-label", "Mark task as completed");
-
-        const taskText = document.createElement("span");
-        taskText.textContent = task.text;
-
-        const actions = document.createElement("div");
-        actions.classList.add("task-actions");
-
-        const editButton = document.createElement("button");
-        editButton.type = "button";
-        editButton.textContent = "Edit";
-        editButton.dataset.action = "edit";
-
-        const deleteButton = document.createElement("button");
-        deleteButton.type = "button";
-        deleteButton.textContent = "Delete";
-        deleteButton.dataset.action = "delete";
-
-        actions.append(editButton, deleteButton);
-        li.append(checkbox, taskText, actions);
-
-        if (task.completed) {
-            li.classList.add("completed");
-        }
-
-        taskList.appendChild(li);
+function renderTasks() {
+    const filteredTasks = tasks.filter(task => {
+        if (currentFilter === "active") return !task.completed;
+        if (currentFilter === "completed") return task.completed;
+        return true;
     });
+
+    const fragment = document.createDocumentFragment();
 
     if (filteredTasks.length === 0) {
-        emptyMessage.style.display = "block";
+        const empty = document.createElement("div");
+        empty.className = "empty-state";
 
-        if (tasks.length === 0) {
-            emptyMessage.textContent = "No tasks yet. Add your first task!";
-        } else if (currentFilter === "active") {
-            emptyMessage.textContent = "No active tasks. You're all caught up!";
-        } else if (currentFilter === "completed") {
-            emptyMessage.textContent = "No completed tasks yet.";
-        }
+        const icon = document.createElement("div");
+        icon.className = "empty-icon";
+        icon.textContent = "✦";
+
+        const heading = document.createElement("h3");
+        heading.textContent = currentFilter === "completed"
+            ? "No completed tasks"
+            : currentFilter === "active"
+                ? "No active tasks"
+                : "No tasks yet";
+
+        const paragraph = document.createElement("p");
+        paragraph.textContent = currentFilter === "all"
+            ? "Add your first task and start being productive."
+            : "Your tasks will appear here.";
+
+        empty.append(icon, heading, paragraph);
+        fragment.append(empty);
     } else {
-        emptyMessage.style.display = "none";
+        filteredTasks.forEach(task => {
+            const item = document.createElement("article");
+            item.className = `task-item${task.completed ? " completed" : ""}`;
+
+            const checkbox = document.createElement("input");
+            checkbox.type = "checkbox";
+            checkbox.className = "task-check";
+            checkbox.checked = task.completed;
+            checkbox.setAttribute("aria-label", `Complete ${task.title}`);
+            checkbox.dataset.action = "toggle";
+            checkbox.dataset.id = task.id;
+
+            const details = document.createElement("div");
+            details.className = "task-details";
+
+            const title = document.createElement("p");
+            title.className = "task-title";
+            title.textContent = task.title;
+
+            const meta = document.createElement("div");
+            meta.className = "task-meta";
+
+            const priority = document.createElement("span");
+            priority.className = `priority ${task.priority}`;
+            priority.textContent = `${task.priority} priority`;
+
+            meta.append(priority);
+            details.append(title, meta);
+
+            const actions = document.createElement("div");
+            actions.className = "task-actions";
+
+            const editButton = document.createElement("button");
+            editButton.className = "action-btn";
+            editButton.type = "button";
+            editButton.textContent = "Edit";
+            editButton.dataset.action = "edit";
+            editButton.dataset.id = task.id;
+            editButton.setAttribute("aria-label", `Edit ${task.title}`);
+
+            const deleteButton = document.createElement("button");
+            deleteButton.className = "action-btn";
+            deleteButton.type = "button";
+            deleteButton.textContent = "Delete";
+            deleteButton.dataset.action = "delete";
+            deleteButton.dataset.id = task.id;
+            deleteButton.setAttribute("aria-label", `Delete ${task.title}`);
+
+            actions.append(editButton, deleteButton);
+            item.append(checkbox, details, actions);
+            fragment.append(item);
+        });
     }
 
-    updateCounts();
+    taskList.replaceChildren(fragment);
+    updateStatistics();
 }
 
-taskForm.addEventListener("submit", function(event) {
+function updateStatistics() {
+    const total = tasks.length;
+    const completed = tasks.filter(task => task.completed).length;
+    const remaining = total - completed;
+    const percentage = total === 0
+        ? 0
+        : Math.round((completed / total) * 100);
+
+    taskCount.textContent = `${total} ${total === 1 ? "Task" : "Tasks"}`;
+    remainingCount.textContent = `${remaining} ${remaining === 1 ? "task" : "tasks"} remaining`;
+    progressPercent.textContent = `${percentage}%`;
+    progressFill.style.width = `${percentage}%`;
+    progressText.textContent = `${completed} of ${total} tasks completed`;
+}
+
+taskForm.addEventListener("submit", event => {
     event.preventDefault();
 
-    const taskText = taskInput.value.trim();
+    const title = taskInput.value.trim();
 
-    if (taskText === "") {
+    if (!title) {
+        taskInput.focus();
         return;
     }
 
-    const newTask = {
-        id: Date.now(),
-                          text: taskText,
-                          completed: false
-    };
-
-    tasks.push(newTask);
-
-    saveTasks();
-
-    taskInput.value = "";
-
-    displayTasks();
-});
-
-taskList.addEventListener("click", function(event) {
-    const button = event.target.closest("button[data-action]");
-
-    if (!button || !taskList.contains(button)) {
-        return;
-    }
-
-    const li = button.closest("li");
-    const taskId = Number(li.dataset.id);
-
-    const task = tasks.find(task => task.id === taskId);
-
-    if (!task) {
-        return;
-    }
-
-    if (button.dataset.action === "delete") {
-        tasks = tasks.filter(task => task.id !== taskId);
-
-        saveTasks();
-        displayTasks();
-    }
-
-    else if (button.dataset.action === "edit") {
-        const updatedText = prompt("Edit your task:", task.text);
-
-        if (updatedText !== null && updatedText.trim() !== "") {
-            task.text = updatedText.trim();
-
-            saveTasks();
-            displayTasks();
-        }
-    }
-});
-
-taskList.addEventListener("change", function(event) {
-    if (event.target.dataset.action === "toggle") {
-        const li = event.target.closest("li");
-        const taskId = Number(li.dataset.id);
-
-        const task = tasks.find(task => task.id === taskId);
+    if (editingId) {
+        const task = tasks.find(item => item.id === editingId);
 
         if (task) {
-            task.completed = event.target.checked;
-
-            saveTasks();
-            displayTasks();
+            task.title = title;
+            task.priority = priorityInput.value;
         }
+
+        editingId = null;
+        document.getElementById("add-button").textContent = "+ Add Task";
+    } else {
+        tasks.unshift({
+            id: createId(),
+            title,
+            priority: priorityInput.value,
+            completed: false
+        });
+    }
+
+    saveTasks();
+    taskForm.reset();
+    priorityInput.value = "medium";
+    renderTasks();
+    taskInput.focus();
+});
+
+taskList.addEventListener("click", event => {
+    const button = event.target.closest("button[data-action]");
+
+    if (!button) return;
+
+    const { action, id } = button.dataset;
+    const task = tasks.find(item => item.id === id);
+
+    if (!task) return;
+
+    if (action === "edit") {
+        editingId = id;
+        taskInput.value = task.title;
+        priorityInput.value = task.priority;
+        document.getElementById("add-button").textContent = "Save Task";
+        taskInput.focus();
+    }
+
+    if (action === "delete") {
+        tasks = tasks.filter(item => item.id !== id);
+
+        if (editingId === id) {
+            editingId = null;
+            taskForm.reset();
+            document.getElementById("add-button").textContent = "+ Add Task";
+        }
+
+        saveTasks();
+        renderTasks();
     }
 });
 
-filterButtons.forEach(button => {
-    button.addEventListener("click", function() {
-        currentFilter = button.dataset.filter;
+taskList.addEventListener("change", event => {
+    const checkbox = event.target.closest('input[data-action="toggle"]');
 
-        filterButtons.forEach(btn => {
-            btn.classList.remove("active");
-        });
+    if (!checkbox) return;
 
-        button.classList.add("active");
+    const task = tasks.find(item => item.id === checkbox.dataset.id);
 
-        displayTasks();
-    });
+    if (task) {
+        task.completed = checkbox.checked;
+        saveTasks();
+        renderTasks();
+    }
 });
 
-loadTasks();
+filterButtons.addEventListener("click", event => {
+    const button = event.target.closest("button[data-filter]");
+
+    if (!button) return;
+
+    currentFilter = button.dataset.filter;
+
+    filterButtons.querySelectorAll(".filter-btn").forEach(item => {
+        const active = item === button;
+        item.classList.toggle("active", active);
+        item.setAttribute("aria-pressed", String(active));
+    });
+
+    renderTasks();
+});
+
+clearCompleted.addEventListener("click", () => {
+    tasks = tasks.filter(task => !task.completed);
+
+    if (editingId && !tasks.some(task => task.id === editingId)) {
+        editingId = null;
+        taskForm.reset();
+        document.getElementById("add-button").textContent = "+ Add Task";
+    }
+
+    saveTasks();
+    renderTasks();
+});
+
+function displayDate() {
+    const date = new Date();
+
+    document.getElementById("current-date").textContent =
+        date.toLocaleDateString("en-IN", {
+            weekday: "short",
+            day: "numeric",
+            month: "short",
+            year: "numeric"
+        });
+}
+
+displayDate();
+renderTasks();
+
+filterButtons.querySelectorAll(".filter-btn").forEach(button => {
+    button.setAttribute(
+        "aria-pressed",
+        String(button.dataset.filter === currentFilter)
+    );
+});
